@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel - Révision Bureautique</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Microsoft Excel</h1>
+            <p>Lycée [Nom de votre lycée] - Classe de Seconde</p>
+        </header>
+
+        <nav>
+            <a href="index.html">🏠 Accueil</a>
+            <a href="word.html">📝 Word</a>
+            <a href="excel.html" class="active">📊 Excel</a>
+            <a href="internet.html">🌐 Internet</a>
+            <a href="raccourcis.html">⌨️ Raccourcis</a>
+            <a href="securite.html">🔒 Sécurité</a>
+            <a href="quiz.html">🎯 Quiz</a>
+        </nav>
+
+        <div class="content">
+            <section class="section">
+                <h2>Formules de base <span class="badge">À connaître ABSOLUMENT</span></h2>
+                
+                <table>
+                    <tr>
+                        <th>Formule</th>
+                        <th>Description</th>
+                        <th>Exemple</th>
+                    </tr>
+                    <tr><td>=SOMME(plage)</td><td>Additionne toutes les cellules</td><td>=SOMME(A1:A10)</td></tr>
+                    <tr><td>=MOYENNE(plage)</td><td>Calcule la moyenne</td><td>=MOYENNE(B2:B20)</td></tr>
+                    <tr><td>=MAX(plage)</td><td>Valeur maximale</td><td>=MAX(C1:C100)</td></tr>
+                    <tr><td>=MIN(plage)</td><td>Valeur minimale</td><td>=MIN(D1:D100)</td></tr>
+                    <tr><td>=NB(plage)</td><td>Compte les cellules avec des nombres</td><td>=NB(E1:E50)</td></tr>
+                    <tr><td>=NBVAL(plage)</td><td>Compte les cellules non vides</td><td>=NBVAL(F1:F50)</td></tr>
+                    <tr><td>=SI(test;vrai;faux)</td><td>Test conditionnel</td><td>=SI(A1>10;"OK";"Pas OK")</td></tr>
+                </table>
+            </section>
+
+            <section class="section">
+                <h2>Raccourcis Excel</h2>
+                
+                <table>
+                    <tr>
+                        <th>Raccourci</th>
+                        <th>Action</th>
+                    </tr>
+                    <tr><td>Ctrl + ;</td><td>Date du jour</td></tr>
+                    <tr><td>Ctrl + Shift + ;</td><td>Heure actuelle</td></tr>
+                    <tr><td>Ctrl + Espace</td><td>Sélectionner la colonne</td></tr>
+                    <tr><td>Shift + Espace</td><td>Sélectionner la ligne</td></tr>
+                    <tr><td>Ctrl + Shift + +</td><td>Insérer des cellules</td></tr>
+                    <tr><td>Ctrl + -</td><td>Supprimer des cellules</td></tr>
+                    <tr><td>F2</td><td>Modifier la cellule</td></tr>
+                    <tr><td>F4</td><td>Répéter la dernière action</td></tr>
+                </table>
+            </section>
+
+            <section class="section">
+                <h2>Astuces pro</h2>
+                
+                <div class="cards-container">
+                    <div class="card">
+                        <h4>💰 Les références absolues</h4>
+                        <p>Le symbole <strong>$</strong> fige la cellule :</p>
+                        <ul>
+                            <li>=A1 (relative)</li>
+                            <li>=$A$1 (absolue)</li>
+                            <li>=A$1 (ligne figée)</li>
+                            <li>=$A1 (colonne figée)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🎯 La poignée de recopie</h4>
+                        <p>Tirez le petit carré en bas à droite de la cellule pour recopier la formule.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>📌 Aller à la ligne</h4>
+                        <p><strong>Alt + Entrée</strong> pour faire un retour à la ligne dans une cellule.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>⚡ Remplissage instantané</h4>
+                        <p><strong>Ctrl + E</strong> : Excel devine ce que vous voulez faire (magique !)</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>© [Nom du lycée] - Formation bureautique seconde</p>
+            <p><a href="index.html">← Retour à l'accueil</a></p>
+        </footer>
+    </div>
+    
+    <script src="js/script.js"></script>
+</body>
+</html>
