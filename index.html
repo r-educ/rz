@@ -3,181 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anti-Sèche Bureautique - Seconde</title>
+    <title>Révision Bureautique - Seconde</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
         }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
         header {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
-            padding: 20px;
+            padding: 40px;
             text-align: center;
-            border-radius: 10px;
-            margin-bottom: 20px;
         }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
         nav {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
             flex-wrap: wrap;
+            background: #f8f9fa;
+            border-bottom: 3px solid #3498db;
+            justify-content: center;
         }
-        .nav-button {
-            background-color: #3498db;
-            color: white;
-            padding: 12px 25px;
+        
+        nav a {
+            color: #2c3e50;
             text-decoration: none;
-            border-radius: 5px;
+            padding: 15px 25px;
             font-weight: bold;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
         }
-        .nav-button:hover {
-            background-color: #2980b9;
+        
+        nav a:hover {
+            background: #e9ecef;
+            border-bottom-color: #3498db;
         }
+        
+        .content {
+            padding: 30px;
+        }
+        
         .section {
-            background-color: white;
-            padding: 20px;
+            background: white;
             border-radius: 10px;
-            margin: 20px 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
         }
+        
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .section h3 {
+            color: #3498db;
+            margin: 20px 0 10px 0;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
+        
         th {
-            background-color: #3498db;
+            background: #3498db;
             color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
         }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
         }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        
+        .quiz-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .quiz-question {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .quiz-option {
+            background: white;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .quiz-option:hover {
+            background: #e3f2fd;
+            border-color: #3498db;
+        }
+        
+        .quiz-result {
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .quiz-result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .quiz-result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
         footer {
+            background: #2c3e50;
+            color: white;
             text-align: center;
+            padding: 20px;
             margin-top: 30px;
-            color: #7f8c8d;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            nav a {
+                flex: 1 1 auto;
+                text-align: center;
+            }
+            
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>📚 Anti-Sèche Bureautique</h1>
-        <p>Seconde - Lycée [Nom de votre lycée]</p>
-    </header>
+    <div class="container">
+        <header>
+            <h1>📚 Anti-Sèche Bureautique</h1>
+            <p>Lycée [Nom de votre lycée] - Classe de Seconde</p>
+            <p>📅 Mise à jour : Février 2026</p>
+        </header>
 
-    <nav>
-        <a href="#word" class="nav-button">📝 Word</a>
-        <a href="#excel" class="nav-button">📊 Excel</a>
-        <a href="#internet" class="nav-button">🌐 Internet</a>
-        <a href="#raccourcis" class="nav-button">⌨️ Raccourcis</a>
-    </nav>
+        <nav>
+            <a href="#word">📝 Word</a>
+            <a href="#excel">📊 Excel</a>
+            <a href="#internet">🌐 Internet</a>
+            <a href="#raccourcis">⌨️ Raccourcis</a>
+            <a href="#securite">🔒 Sécurité</a>
+            <a href="#quiz">🎯 Quiz</a>
+        </nav>
 
-    <section id="word" class="section">
-        <h2>📝 Word - Les essentiels</h2>
-        <h3>Mise en forme rapide</h3>
-        <ul>
-            <li><strong>Ctrl+G</strong> : Gras</li>
-            <li><strong>Ctrl+I</strong> : Italique</li>
-            <li><strong>Ctrl+S</strong> : Souligné</li>
-            <li><strong>Ctrl+E</strong> : Centrer</li>
-            <li><strong>Ctrl+J</strong> : Justifier</li>
-        </ul>
-        <h3>Les styles</h3>
-        <p>Utilisez les styles (Titre 1, Titre 2, Normal) pour structurer votre document automatiquement.</p>
-    </section>
+        <div class="content">
+            <!-- Section Word -->
+            <section id="word" class="section">
+                <h2>📝 Microsoft Word <span class="badge">Essentiel</span></h2>
+                
+                <h3>Raccourcis indispensables</h3>
+                <table>
+                    <tr>
+                        <th>Raccourci</th>
+                        <th>Action</th>
+                        <th>À retenir</th>
+                    </tr>
+                    <tr><td>Ctrl + N</td><td>Nouveau document</td><td>⭐ À connaître</td></tr>
+                    <tr><td>Ctrl + O</td><td>Ouvrir un document</td><td></td></tr>
+                    <tr><td>Ctrl + S</td><td>Sauvegarder</td><td>⭐⭐ À faire toutes les 5 min</td></tr>
+                    <tr><td>Ctrl + G</td><td>Gras</td><td>⭐</td></tr>
+                    <tr><td>Ctrl + I</td><td>Italique</td><td>⭐</td></tr>
+                    <tr><td>Ctrl + U</td><td>Souligné</td><td>⭐</td></tr>
+                    <tr><td>Ctrl + E</td><td>Centrer</td><td></td></tr>
+                    <tr><td>Ctrl + J</td><td>Justifier</td><td></td></tr>
+                </table>
 
-    <section id="excel" class="section">
-        <h2>📊 Excel - Formules de base</h2>
-        <table>
-            <tr>
-                <th>Formule</th>
-                <th>À quoi ça sert ?</th>
-                <th>Exemple</th>
-            </tr>
-            <tr>
-                <td>=SOMME()</td>
-                <td>Additionne des cellules</td>
-                <td>=SOMME(A1:A10)</td>
-            </tr>
-            <tr>
-                <td>=MOYENNE()</td>
-                <td>Calcule la moyenne</td>
-                <td>=MOYENNE(B1:B20)</td>
-            </tr>
-            <tr>
-                <td>=SI()</td>
-                <td>Teste une condition</td>
-                <td>=SI(A1>10;"Réussi";"Échec")</td>
-            </tr>
-            <tr>
-                <td>=NB()</td>
-                <td>Compte les nombres</td>
-                <td>=NB(C1:C50)</td>
-            </tr>
-        </table>
-    </section>
+                <h3>Les styles (la base !)</h3>
+                <div class="cards-container">
+                    <div class="card">
+                        <h4>Titre 1</h4>
+                        <p>Pour les titres de chapitres. Raccourci : Ctrl + Alt + 1</p>
+                    </div>
+                    <div class="card">
+                        <h4>Titre 2</h4>
+                        <p>Pour les sous-parties. Raccourci : Ctrl + Alt + 2</p>
+                    </div>
+                    <div class="card">
+                        <h4>Normal</h4>
+                        <p>Pour le corps du texte. Raccourci : Ctrl + Alt + N</p>
+                    </div>
+                </div>
+            </section>
 
-    <section id="internet" class="section">
-        <h2>🌐 Internet - Sécurité</h2>
-        <h3>Les bons réflexes</h3>
-        <ul>
-            <li>🔒 Vérifiez le cadenas dans la barre d'adresse</li>
-            <li>🔑 Utilisez des mots de passe différents pour chaque site</li>
-            <li>📧 Ne cliquez pas sur les liens dans les emails suspects</li>
-            <li>🔄 Mettez à jour vos logiciels régulièrement</li>
-        </ul>
-    </section>
+            <!-- Section Excel -->
+            <section id="excel" class="section">
+                <h2>📊 Microsoft Excel <span class="badge">À maîtriser</span></h2>
 
-    <section id="raccourcis" class="section">
-        <h2>⌨️ Raccourcis indispensables</h2>
-        <table>
-            <tr>
-                <th>Raccourci</th>
-                <th>Action</th>
-            </tr>
-            <tr><td>Ctrl+C</td><td>Copier</td></tr>
-            <tr><td>Ctrl+X</td><td>Couper</td></tr>
-            <tr><td>Ctrl+V</td><td>Coller</td></tr>
-            <tr><td>Ctrl+Z</td><td>Annuler</td></tr>
-            <tr><td>Ctrl+Y</td><td>Rétablir</td></tr>
-            <tr><td>Ctrl+A</td><td>Tout sélectionner</td></tr>
-            <tr><td>Ctrl+F</td><td>Rechercher</td></tr>
-            <tr><td>Ctrl+P</td><td>Imprimer</td></tr>
-        </table>
-    </section>
-<section class="section">
-    <h2>📝 Quiz Excel</h2>
-    <div id="quiz">
-        <p><strong>Question : Quelle formule permet de calculer la moyenne des cellules A1 à A10 ?</strong></p>
-        <button onclick="verifierReponse('moyenne')">=MOYENNE(A1:A10)</button>
-        <button onclick="verifierReponse('somme')">=SOMME(A1:A10)</button>
-        <button onclick="verifierReponse('moy')">=MOY(A1:A10)</button>
-        <p id="resultat"></p>
+                <h3>Formules de base</h3>
+                <table>
+                    <tr>
+                        <th>Formule</th>
+                        <th>Description</th>
+                        <th>Exemple</th>
+                    </tr>
+                    <tr><td>=SOMME(plage)</td><td>Additionne toutes les cellules</td><td>=SOMME(A1:A10)</td></tr>
+                    <tr><td>=MOYENNE(plage)</td><td>Calcule la moyenne</td><td>=MOYENNE(B2:B20)</td></tr>
+                    <tr><td>=MAX(plage)</td><td>Valeur maximale</td><td>=MAX(C1:C100)</td></tr>
+                    <tr><td>=MIN(plage)</td><td>Valeur minimale</td><td>=MIN(D1:D100)</td></tr>
+                    <tr><td>=NB(plage)</td><td>Compte les cellules avec des nombres</td><td>=NB(E1:E50)</td></tr>
+                    <tr><td>=SI(test;vrai;faux)</td><td>Test conditionnel</td><td>=SI(A1>10;"OK";"Pas OK")</td></tr>
+                </table>
+
+                <h3>Astuces pro</h3>
+                <ul style="margin-left: 20px;">
+                    <li>💰 Le symbole $ fige la cellule : =$A$1 reste toujours A1</li>
+                    <li>🎯 La poignée de recopie : tirez le petit carré en bas à droite</li>
+                    <li>📌 Alt + Entrée : aller à la ligne dans une cellule</li>
+                </ul>
+            </section>
+
+            <!-- Section Internet -->
+            <section id="internet" class="section">
+                <h2>🌐 Internet et navigation</h2>
+                
+                <h3>Raccourcis navigateur</h3>
+                <table>
+                    <tr><th>Raccourci</th><th>Action</th></tr>
+                    <tr><td>Ctrl + T</td><td>Nouvel onglet</td></tr>
+                    <tr><td>Ctrl + W</td><td>Fermer l'onglet</td></tr>
+                    <tr><td>Ctrl + Tab</td><td>Changer d'onglet</td></tr>
+                    <tr><td>Ctrl + Shift + T</td><td>Rouvrir le dernier onglet fermé</td></tr>
+                    <tr><td>Ctrl + L</td><td>Sélectionner la barre d'adresse</td></tr>
+                    <tr><td>Ctrl + D</td><td>Ajouter aux favoris</td></tr>
+                </table>
+            </section>
+
+            <!-- Section Raccourcis -->
+            <section id="raccourcis" class="section">
+                <h2>⌨️ Raccourcis Windows incontournables</h2>
+                
+                <table>
+                    <tr><th>Raccourci</th><th>Action</th></tr>
+                    <tr><td>Windows + E</td><td>Ouvrir l'explorateur de fichiers</td></tr>
+                    <tr><td>Windows + D</td><td>Afficher le bureau</td></tr>
+                    <tr><td>Windows + L</td><td>Verrouiller la session</td></tr>
+                    <tr><td>Alt + Tab</td><td>Changer de fenêtre</td></tr>
+                    <tr><td>Ctrl + Alt + Suppr</td><td>Gestionnaire des tâches</td></tr>
+                    <tr><td>Impr écran</td><td>Capture d'écran</td></tr>
+                    <tr><td>Windows + Shift + S</td><td>Capture partielle (Windows 10/11)</td></tr>
+                </table>
+            </section>
+
+            <!-- Section Sécurité -->
+            <section id="securite" class="section">
+                <h2>🔒 Sécurité numérique</h2>
+                
+                <div class="cards-container">
+                    <div class="card">
+                        <h4>Mots de passe</h4>
+                        <p>12 caractères minimum, mélangez lettres majuscules/minuscules, chiffres et symboles</p>
+                        <p>🔑 Utilisez un gestionnaire de mots de passe</p>
+                    </div>
+                    <div class="card">
+                        <h4>Phishing (hameçonnage)</h4>
+                        <p>Ne cliquez jamais sur un lien dans un email suspect. Vérifiez toujours l'adresse de l'expéditeur.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Mises à jour</h4>
+                        <p>Installez toujours les mises à jour de sécurité. Elles protègent des virus.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Sauvegarde</h4>
+                        <p>3-2-1 : 3 copies, 2 supports différents, 1 copie hors site (cloud ou disque externe)</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section Quiz interactif -->
+            <section id="quiz" class="section">
+                <h2>🎯 Teste tes connaissances</h2>
+                
+                <div class="quiz-container" id="quiz1">
+                    <div class="quiz-question">1. Quelle formule permet de calculer la somme des cellules A1 à A10 ?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(this, '=ADD(A1:A10)', false)">=ADD(A1:A10)</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, '=TOTAL(A1:A10)', false)">=TOTAL(A1:A10)</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, '=SOMME(A1:A10)', true)">=SOMME(A1:A10) ✓</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, '=A1+A10', false)">=A1+A10</div>
+                    </div>
+                    <div id="result1" class="quiz-result"></div>
+                </div>
+
+                <div class="quiz-container" id="quiz2">
+                    <div class="quiz-question">2. Quel est le raccourci pour sauvegarder un document ?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Ctrl + D', false)">Ctrl + D</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Ctrl + S', true)">Ctrl + S ✓</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Ctrl + G', false)">Ctrl + G</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Ctrl + X', false)">Ctrl + X</div>
+                    </div>
+                    <div id="result2" class="quiz-result"></div>
+                </div>
+
+                <div class="quiz-container" id="quiz3">
+                    <div class="quiz-question">3. Que signifie le cadenas dans la barre d'adresse d'un site ?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Le site est payant', false)">Le site est payant</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'La connexion est sécurisée', true)">La connexion est sécurisée ✓</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Le site est français', false)">Le site est français</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, "C'est une publicité", false)">C'est une publicité</div>
+                    </div>
+                    <div id="result3" class="quiz-result"></div>
+                </div>
+
+                <div class="quiz-container" id="quiz4">
+                    <div class="quiz-question">4. Comment figer une cellule dans une formule Excel ?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Avec des crochets [A1]', false)">Avec des crochets [A1]</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'Avec le symbole $', true)">Avec le symbole $ ✓</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, "En l'entourant de ' '", false)">En l'entourant de ' '</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, 'En mettant en gras', false)">En mettant en gras</div>
+                    </div>
+                    <div id="result4" class="quiz-result"></div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="resetQuiz()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">🔄 Recommencer les quiz</button>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>© [Nom du lycée] - Formation bureautique seconde</p>
+            <p>📧 Contactez votre formateur : [votre-email]</p>
+            <p>✨ Site créé par et pour les élèves - N'hésitez pas à proposer des améliorations ✨</p>
+        </footer>
     </div>
+
     <script>
-        function verifierReponse(reponse) {
-            const resultat = document.getElementById('resultat');
-            if (reponse === 'moyenne') {
-                resultat.innerHTML = '✅ Bravo ! C\'est la bonne réponse.';
-                resultat.style.color = 'green';
+        function checkAnswer(option, expected, isCorrect) {
+            // Désactiver toutes les options dans ce quiz
+            const container = option.closest('.quiz-container');
+            const options = container.querySelectorAll('.quiz-option');
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                opt.style.opacity = '0.6';
+            });
+            
+            // Trouver le résultat
+            const resultDiv = container.querySelector('.quiz-result');
+            
+            // Afficher le résultat
+            if (isCorrect) {
+                resultDiv.className = 'quiz-result success';
+                resultDiv.innerHTML = '✅ Bravo ! C\'est la bonne réponse.';
+                option.style.background = '#d4edda';
+                option.style.borderColor = '#28a745';
             } else {
-                resultat.innerHTML = '❌ Essaie encore !';
-                resultat.style.color = 'red';
+                resultDiv.className = 'quiz-result error';
+                resultDiv.innerHTML = '❌ Ce n\'est pas la bonne réponse. Essaie encore une autre fois !';
+                option.style.background = '#f8d7da';
+                option.style.borderColor = '#dc3545';
+                
+                // Mettre en évidence la bonne réponse
+                options.forEach(opt => {
+                    if (opt.innerText.includes('✓') || opt.getAttribute('onclick').includes('true')) {
+                        opt.style.background = '#d4edda';
+                        opt.style.borderColor = '#28a745';
+                    }
+                });
             }
         }
+        
+        function resetQuiz() {
+            const containers = document.querySelectorAll('.quiz-container');
+            containers.forEach(container => {
+                const options = container.querySelectorAll('.quiz-option');
+                options.forEach(opt => {
+                    opt.style.pointerEvents = 'auto';
+                    opt.style.opacity = '1';
+                    opt.style.background = 'white';
+                    opt.style.borderColor = '#e0e0e0';
+                });
+                
+                const resultDiv = container.querySelector('.quiz-result');
+                resultDiv.className = 'quiz-result';
+                resultDiv.innerHTML = '';
+            });
+        }
     </script>
-</section>
-    <footer>
-        <p>Révision Bureautique - Seconde - Mise à jour : [Date]</p>
-    </footer>
 </body>
 </html>
