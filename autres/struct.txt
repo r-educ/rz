@@ -1,0 +1,12 @@
+votre-projet/
+│
+├── index.html           (Dashboard principal - NOUVEAU)
+├── dashboard-style.css  (Styles communs - NOUVEAU)
+├── dashboard.js         (Logique du dashboard - NOUVEAU)
+├── word/
+│   ├── index.html      (Page du chapitre Word)
+│   └── quiz.html       (Quiz Word)
+├── excel/
+│   ├── index.html      (Page du chapitre Excel)
+│   └── quiz.html       (Quiz Excel)
+└── [autres chapitres...]
