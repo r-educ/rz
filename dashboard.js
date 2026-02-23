@@ -39,11 +39,12 @@ function showSettings() {
     let html = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <h2><i class="fas fa-cog"></i> Administration</h2>
-            <p style="color: #666; margin-bottom: 2rem;">Créer les classes, les matières et les chapitres</p>
+            
             <button class="btn-primary" onclick="showAddClassForm()">
                 <i class="fas fa-plus"></i> Nouvelle classe
             </button>
         </div>
+        <p style="color: #666; margin-bottom: 2rem;">Créer les classes, les matières et les chapitres</p>
     `;
     
     if (pedagogieData.classes.length === 0) {
