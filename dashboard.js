@@ -815,20 +815,32 @@ function deleteClass(classId) {
     const classe = findClass(classId);
     if (!classe) return;
     
-    // Compter le nombre de matières et chapitres
-    const subjectCount = classe.subjects?.length || 0;
-    const chapterCount = classe.subjects?.reduce((acc, s) => acc + (s.chapters?.length || 0), 0) || 0;
-    
-    showConfirmModal(
-        'Supprimer cette classe ?',
-        `La classe "${classe.name}" et ses ${subjectCount} matière(s) (${chapterCount} chapitre(s)) seront définitivement supprimées.`,
-        () => {
-            pedagogieData.classes = pedagogieData.classes.filter(c => c.id !== classId);
-            saveData();
-            navigateTo('home');
-        }
-    );
+    if (confirm(`Supprimer définitivement la classe "${classe.name}" ?`)) {
+        pedagogieData.classes = pedagogieData.classes.filter(c => c.id !== classId);
+        saveData();
+        alert('Classe supprimée');
+        navigateTo('home');
+    }
 }
+
+// function deleteClass(classId) {
+//     const classe = findClass(classId);
+//     if (!classe) return;
+    
+//     // Compter le nombre de matières et chapitres
+//     const subjectCount = classe.subjects?.length || 0;
+//     const chapterCount = classe.subjects?.reduce((acc, s) => acc + (s.chapters?.length || 0), 0) || 0;
+    
+//     showConfirmModal(
+//         'Supprimer cette classe ?',
+//         `La classe "${classe.name}" et ses ${subjectCount} matière(s) (${chapterCount} chapitre(s)) seront définitivement supprimées.`,
+//         () => {
+//             pedagogieData.classes = pedagogieData.classes.filter(c => c.id !== classId);
+//             saveData();
+//             navigateTo('home');
+//         }
+//     );
+// }
 
 // ---- Pour les matières ----
 function editSubject(classId, subjectId) {
@@ -910,25 +922,39 @@ function updateSubject(event, classId, subjectId) {
     navigateTo('class', classId);
 }
 
+
 function deleteSubject(classId, subjectId) {
     const subject = findSubject(classId, subjectId);
     if (!subject) return;
     
-    const chapterCount = subject.chapters?.length || 0;
-    
-    showConfirmModal(
-        'Supprimer cette matière ?',
-        `La matière "${subject.name}" et ses ${chapterCount} chapitre(s) seront définitivement supprimées.`,
-        () => {
-            const classe = findClass(classId);
-            if (classe) {
-                classe.subjects = classe.subjects.filter(s => s.id !== subjectId);
-                saveData();
-                navigateTo('class', classId);
-            }
-        }
-    );
+    if (confirm(`Supprimer définitivement la matière "${subject.name}" ?`)) {
+        const classe = findClass(classId);
+        classe.subjects = classe.subjects.filter(s => s.id !== subjectId);
+        saveData();
+        alert('Matière supprimée');
+        navigateTo('class', classId);
+    }
 }
+
+// function deleteSubject(classId, subjectId) {
+//     const subject = findSubject(classId, subjectId);
+//     if (!subject) return;
+    
+//     const chapterCount = subject.chapters?.length || 0;
+    
+//     showConfirmModal(
+//         'Supprimer cette matière ?',
+//         `La matière "${subject.name}" et ses ${chapterCount} chapitre(s) seront définitivement supprimées.`,
+//         () => {
+//             const classe = findClass(classId);
+//             if (classe) {
+//                 classe.subjects = classe.subjects.filter(s => s.id !== subjectId);
+//                 saveData();
+//                 navigateTo('class', classId);
+//             }
+//         }
+//     );
+// }
 
 // ---- Pour les chapitres ----
 function editChapter(classId, subjectId, chapterId) {
@@ -1019,58 +1045,37 @@ function deleteChapter(classId, subjectId, chapterId) {
     const chapter = subject?.chapters.find(c => c.id === chapterId);
     if (!chapter) return;
     
-    const quizCount = chapter.quiz?.length || 0;
-    
-    showConfirmModal(
-        'Supprimer ce chapitre ?',
-        `Le chapitre "${chapter.title}" et ses ${quizCount} question(s) seront définitivement supprimés.`,
-        () => {
-            if (subject) {
-                subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
-                saveData();
-                navigateTo('subject', classId, subjectId);
-            }
-        }
-    );
+    if (confirm(`Supprimer définitivement le chapitre "${chapter.title}" ?`)) {
+        subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
+        saveData();
+        alert('Chapitre supprimé');
+        navigateTo('subject', classId, subjectId);
+    }
 }
+
+// function deleteChapter(classId, subjectId, chapterId) {
+//     const subject = findSubject(classId, subjectId);
+//     const chapter = subject?.chapters.find(c => c.id === chapterId);
+//     if (!chapter) return;
+    
+//     const quizCount = chapter.quiz?.length || 0;
+    
+//     showConfirmModal(
+//         'Supprimer ce chapitre ?',
+//         `Le chapitre "${chapter.title}" et ses ${quizCount} question(s) seront définitivement supprimés.`,
+//         () => {
+//             if (subject) {
+//                 subject.chapters = subject.chapters.filter(c => c.id !== chapterId);
+//                 saveData();
+//                 navigateTo('subject', classId, subjectId);
+//             }
+//         }
+//     );
+// }
 
 // ============================================
 // MODAL DE CONFIRMATION
 // ============================================
-
-function showConfirmModal(title, message, onConfirm) {
-    // Créer l'overlay du modal
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.id = 'confirmModal';
-    overlay.style.display = 'flex';
-    
-    overlay.innerHTML = `
-        <div class="modern-modal confirm-modal">
-            <div class="modal-content" style="text-align: center;">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>${title}</h3>
-                <p>${message}</p>
-                <div class="confirm-actions">
-                    <button class="btn btn-secondary" onclick="closeConfirmModal()">
-                        Annuler
-                    </button>
-                    <button class="btn btn-danger" onclick="executeDeletion()">
-                        Supprimer
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(overlay);
-    
-    // Stocker la fonction de confirmation
-    window.executeDeletion = function() {
-        onConfirm();
-        closeConfirmModal();
-    };
-}
 
 function closeConfirmModal() {
     const modal = document.getElementById('confirmModal');

@@ -46,13 +46,20 @@
     gap: 1rem;
 }
 
-.header-title h1 {
+/* .header-title h1 {
     font-size: 1.875rem;
     font-weight: 700;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.25rem;
+} */
+
+.header-title h1 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--primary-dark); /* Une seule couleur unie */
 }
 
 .header-title p {
