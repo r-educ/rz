@@ -1,0 +1,27 @@
+{
+  "classes": [
+    {
+      "id": "seconde",
+      "name": "Seconde",
+      "subjects": [
+        {
+          "id": "bureautique",
+          "name": "Bureautique",
+          "chapters": [
+            {
+              "id": "word-bases",
+              "title": "Word - Les bases",
+              "quiz": [
+                {
+                  "question": "Quel raccourci pour copier ?",
+                  "options": ["Ctrl+X", "Ctrl+C", "Ctrl+V", "Ctrl+Z"],
+                  "correct": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

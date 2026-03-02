@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link rel="stylesheet" href="dashboard-modern.css">
+    <style>
+        .quiz-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-500);
+            margin-bottom: 2rem;
+        }
+        
+        .question-card {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-800);
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .option:hover {
+            border-color: var(--primary);
+            background: var(--primary-50);
+        }
+        
+        .option.selected {
+            border-color: var(--primary);
+            background: var(--primary-50);
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 1rem;
+            accent-color: var(--primary);
+        }
+        
+        .quiz-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .results {
+            background: var(--gray-50);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .score {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+        
+        .correction-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: var(--radius-md);
+        }
+        
+        .correction-item.correct {
+            background: var(--success-50);
+            border-left: 4px solid var(--success);
+        }
+        
+        .correction-item.incorrect {
+            background: var(--danger-50);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <a href="index.html" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            Retour au tableau de bord
+        </a>
+        
+        <div class="quiz-container" id="quizContainer">
+            <!-- Le quiz sera chargé dynamiquement -->
+        </div>
+    </div>
+
+    <script>
+        // Récupérer les paramètres de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('class');
+        const subjectId = urlParams.get('subject');
+        const chapterId = urlParams.get('chapter');
+        
+        let currentQuiz = null;
+        let userAnswers = [];
+        
+        // Charger les données
+       async function loadQuiz() {
+    console.log('🔍 Recherche du quiz...');
+    
+    try {
+        // 1. Charger les données
+        const response = await fetch('data/pedagogie.json');
+        if (!response.ok) throw new Error('Fichier JSON non trouvé');
+        
+        const data = await response.json();
+        console.log('✅ Données chargées');
+        
+        // 2. Récupérer les paramètres de l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('class');
+        const subjectId = urlParams.get('subject');
+        const chapterId = urlParams.get('chapter');
+        
+        console.log('📍 Paramètres reçus:', { classId, subjectId, chapterId });
+        
+        // 3. Chercher la classe (par ID ou par nom)
+        let classe = data.classes.find(c => c.id === classId);
+        
+        // Si pas trouvé, chercher sans le timestamp
+        if (!classe && classId) {
+            const baseId = classId.replace(/-\d+$/, '');
+            classe = data.classes.find(c => c.id.startsWith(baseId));
+        }
+        
+        // Si toujours pas trouvé, prendre la première classe
+        if (!classe) {
+            console.log('⚠️ Classe non trouvée, utilisation de la première classe');
+            classe = data.classes[0];
+        }
+        
+        if (!classe) throw new Error('Aucune classe disponible');
+        console.log('✅ Classe:', classe.name);
+        
+        // 4. Chercher la matière
+        let subject = classe.subjects?.find(s => s.id === subjectId);
+        
+        if (!subject && subjectId) {
+            const baseId = subjectId.replace(/-\d+$/, '');
+            subject = classe.subjects?.find(s => s.id.startsWith(baseId));
+        }
+        
+        if (!subject) {
+            console.log('⚠️ Matière non trouvée, utilisation de la première matière');
+            subject = classe.subjects?.[0];
+        }
+        
+        if (!subject) throw new Error('Aucune matière disponible');
+        console.log('✅ Matière:', subject.name);
+        
+        // 5. Chercher le chapitre
+        let chapter = subject.chapters?.find(c => c.id === chapterId);
+        
+        if (!chapter && chapterId) {
+            const baseId = chapterId.replace(/-\d+$/, '');
+            chapter = subject.chapters?.find(c => c.id.startsWith(baseId));
+        }
+        
+        if (!chapter) {
+            console.log('⚠️ Chapitre non trouvé, utilisation du premier chapitre');
+            chapter = subject.chapters?.[0];
+        }
+        
+        if (!chapter) throw new Error('Aucun chapitre disponible');
+        console.log('✅ Chapitre:', chapter.title);
+        
+        // 6. Vérifier le quiz
+        if (!chapter.quiz || chapter.quiz.length === 0) {
+            console.log('⚠️ Pas de quiz dans ce chapitre');
+            
+            // Afficher un message mais permettre d'ajouter des questions
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="quiz-header">
+                    <h1>${chapter.icon || '📚'} ${chapter.title}</h1>
+                    <p>${chapter.fundamentals?.objectives || ''}</p>
+                </div>
+                <div class="empty-state">
+                    <i class="fas fa-question-circle"></i>
+                    <h3>Pas encore de quiz</h3>
+                    <p>Ce chapitre n'a pas de questions pour le moment.</p>
+                    <button class="btn btn-primary" onclick="window.location.href='index.html'">
+                        Retour à l'accueil
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // 7. Afficher le quiz
+        console.log(`✅ ${chapter.quiz.length} questions trouvées`);
+        currentQuiz = chapter.quiz;
+        displayQuiz(chapter);
+        
+    } catch (error) {
+        console.error('❌ Erreur:', error);
+        document.getElementById('quizContainer').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                <h3>Erreur de chargement</h3>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="location.reload()">
+                    Réessayer
+                </button>
+            </div>
+        `;
+    }
+}
+        
+
+
+        
+        function displayQuiz(chapter) {
+            const container = document.getElementById('quizContainer');
+            
+            let html = `
+                <div class="quiz-header">
+                    <h1>${chapter.icon || '📚'} ${chapter.title}</h1>
+                    <p>${chapter.fundamentals?.objectives || ''}</p>
+                </div>
+                
+                <div class="quiz-info">
+                    <span><i class="fas fa-question-circle"></i> ${currentQuiz.length} questions</span>
+                    <span><i class="fas fa-clock"></i> À votre rythme</span>
+                </div>
+                
+                <form id="quizForm">
+            `;
+            
+            currentQuiz.forEach((q, index) => {
+                html += `
+                    <div class="question-card">
+                        <div class="question-text">
+                            ${index + 1}. ${q.question}
+                        </div>
+                        <div class="options">
+                `;
+                
+                q.options.forEach((option, optIndex) => {
+                    html += `
+                        <label class="option">
+                            <input type="radio" 
+                                   name="q${index}" 
+                                   value="${optIndex}"
+                                   onchange="selectOption(${index}, ${optIndex})">
+                            <span>${option}</span>
+                        </label>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            });
+            
+            html += `
+                </form>
+                
+                <div class="quiz-actions">
+                    <button class="btn btn-secondary" onclick="resetQuiz()">
+                        <i class="fas fa-redo"></i>
+                        Réinitialiser
+                    </button>
+                    <button class="btn btn-primary" onclick="submitQuiz()">
+                        <i class="fas fa-check"></i>
+                        Vérifier mes réponses
+                    </button>
+                </div>
+                
+                <div id="results" class="results"></div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function selectOption(questionIndex, optionIndex) {
+            userAnswers[questionIndex] = optionIndex;
+        }
+        
+        function resetQuiz() {
+            userAnswers = [];
+            document.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
+            });
+            document.getElementById('results').classList.remove('show');
+        }
+        
+        function submitQuiz() {
+            // Vérifier que toutes les questions ont une réponse
+            for (let i = 0; i < currentQuiz.length; i++) {
+                if (userAnswers[i] === undefined) {
+                    alert(`Veuillez répondre à la question ${i + 1}`);
+                    return;
+                }
+            }
+            
+            // Calculer le score
+            let correctCount = 0;
+            let corrections = [];
+            
+            currentQuiz.forEach((q, index) => {
+                const isCorrect = (userAnswers[index] === q.correct);
+                if (isCorrect) correctCount++;
+                
+                corrections.push({
+                    question: q.question,
+                    userAnswer: q.options[userAnswers[index]],
+                    correctAnswer: q.options[q.correct],
+                    isCorrect: isCorrect
+                });
+            });
+            
+            // Afficher les résultats
+            displayResults(correctCount, corrections);
+        }
+        
+        function displayResults(score, corrections) {
+            const resultsDiv = document.getElementById('results');
+            const percentage = Math.round((score / currentQuiz.length) * 100);
+            
+            let html = `
+                <h2>📊 Vos résultats</h2>
+                <div class="score">
+                    ${score}/${currentQuiz.length} (${percentage}%)
+                </div>
+                <div style="margin-top: 2rem;">
+            `;
+            
+            corrections.forEach((c, index) => {
+                html += `
+                    <div class="correction-item ${c.isCorrect ? 'correct' : 'incorrect'}">
+                        <strong>Question ${index + 1}:</strong> ${c.question}<br>
+                        ${c.isCorrect ? '✅' : '❌'} Votre réponse: ${c.userAnswer}<br>
+                        ${!c.isCorrect ? '✓ Bonne réponse: ' + c.correctAnswer : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            // Ajouter des encouragements
+            if (percentage === 100) {
+                html += '<p style="text-align: center; margin-top: 1rem;">🏆 Parfait ! Bravo !</p>';
+            } else if (percentage >= 80) {
+                html += '<p style="text-align: center; margin-top: 1rem;">👍 Très bien ! Continuez comme ça !</p>';
+            } else if (percentage >= 50) {
+                html += '<p style="text-align: center; margin-top: 1rem;">📚 Encore un peu de révision !</p>';
+            } else {
+                html += '<p style="text-align: center; margin-top: 1rem;">💪 Réessayez, vous allez y arriver !</p>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.add('show');
+            
+            // Faire défiler jusqu'aux résultats
+            resultsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showError(message) {
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                    <h3>${message}</h3>
+                    <a href="index.html" class="btn btn-primary" style="margin-top: 1rem;">
+                        Retour à l'accueil
+                    </a>
+                </div>
+            `;
+        }
+
+
+
+        
+        
+        // Charger le quiz au démarrage
+        document.addEventListener('DOMContentLoaded', loadQuiz);
+    </script>
+</body>
+</html>
