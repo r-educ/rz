@@ -1,36 +1,58 @@
 {
   "classes": [
     {
-      "id": "seconde",
-      "name": "Seconde",
+      "id": "2g2-1774344754782",
+      "name": "2G2",
+      "level": "Lycée",
+      "color": "#6366f1",
       "subjects": [
         {
-          "id": "bureautique",
-          "name": "Bureautique",
+          "id": "informatique-1774344789397",
+          "name": "Informatique",
+          "description": "",
+          "icon": "📚",
           "chapters": [
             {
-              "id": "word-bases",
-              "title": "Word - Les bases",
+              "id": "generalites-1774344849736",
+              "title": "Généralités",
+              "icon": "📚",
+              "fundamentals": {
+                "objectives": "les b-a ba de l'informatique\n",
+                "keyPoints": "",
+                "resources": ""
+              },
               "quiz": [
                 {
-                  "question": "Quel raccourci pour copier ?",
+                  "question": "informatique = ",
                   "options": [
-                    "Ctrl+X",
-                    "Ctrl+C",
-                    "Ctrl+V",
-                    "Ctrl+Z"
+                    "information + automatique",
+                    "infor + matique",
+                    "informatique + automatique",
+                    "information + mécanique"
                   ],
-                  "correct": 1
+                  "correct": 0
                 }
               ]
             }
           ]
         }
-      ],
+      ]
+    },
+    {
+      "id": "1g2-1774344768292",
+      "name": "1G2",
       "level": "Lycée",
-      "color": "#000000"
+      "color": "#6366f1",
+      "subjects": []
+    },
+    {
+      "id": "tg2-1774344776148",
+      "name": "TG2",
+      "level": "Lycée",
+      "color": "#6366f1",
+      "subjects": []
     }
   ],
-  "lastUpdate": "2026-03-24T09:30:17.508Z",
+  "lastUpdate": "2026-03-24T09:35:35.661Z",
   "version": "1.0.0"
 }
