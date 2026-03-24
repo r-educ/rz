@@ -1,90 +1,61 @@
 {
   "classes": [
     {
-      "id": "seconde",
-      "name": "Seconde G",
+      "id": "2g2-1774342619731",
+      "name": "2G2",
+      "level": "Lycée",
+      "color": "#6366f1",
       "subjects": [
         {
-          "id": "bureautique",
+          "id": "informatique-1774342676873",
           "name": "Informatique",
+          "description": "Prise en main de l'outil informatique",
+          "icon": "💻",
           "chapters": [
             {
-              "id": "word-bases",
-              "title": "Word - Les bases",
-              "quiz": [
-                {
-                  "question": "Quel raccourci pour copier ?",
-                  "options": [
-                    "Ctrl+X",
-                    "Ctrl+C",
-                    "Ctrl+V",
-                    "Ctrl+Z"
-                  ],
-                  "correct": 1
-                },
-                {
-                  "question": "internet est ",
-                  "options": [
-                    "un réseau de télélphonie mobile",
-                    "un réseau mondial d'ordinateurs et autres équipoementsinformatiques",
-                    "une carte dans l'ordinateur",
-                    "un monde meilleur"
-                  ],
-                  "correct": 1
-                }
-              ]
-            }
-          ],
-          "description": "Les ba-ba de l'informatique",
-          "icon": "💻"
-        }
-      ],
-      "level": "Lycée",
-      "color": "#0000ff"
-    },
-    {
-      "id": "premiere-1774339095118",
-      "name": "Première G",
-      "level": "Lycée",
-      "color": "#00ff00",
-      "subjects": [
-        {
-          "id": "francais-1774339133708",
-          "name": "Français",
-          "description": "Expression et Communication Françaises",
-          "icon": "📘",
-          "chapters": [
-            {
-              "id": "lasalutation-1774339171923",
-              "title": "LaSalutation",
+              "id": "generalites-sur-l-informatique-1774342742214",
+              "title": "généralités sur l'informatique",
               "icon": "📚",
               "fundamentals": {
-                "objectives": "",
-                "keyPoints": "",
+                "objectives": "se familiariser avec les notions de base",
+                "keyPoints": "information,traitement de l'information, système informatique",
                 "resources": ""
               },
               "quiz": [
                 {
-                  "question": "le matin on dit",
+                  "question": "informatique  =",
                   "options": [
-                    "salut",
-                    "bonjour",
-                    "hola",
-                    "bonsoir"
+                    "science de l'ordinateur",
+                    "science de l'information",
+                    "science du traitement automatique de l'information .....",
+                    "aucune bonne réponse"
                   ],
-                  "correct": 1
+                  "correct": 2
+                },
+                {
+                  "question": "ordinateur =",
+                  "options": [
+                    "machine de traitement automatique de l'information",
+                    "machine électrique de l'informatique",
+                    "pc",
+                    "aucune bonne réponse"
+                  ],
+                  "correct": 0
                 }
               ]
             }
           ]
         }
       ]
+    },
+    {
+      "id": "1g2-1774342640467",
+      "name": "1G2",
+      "level": "Lycée",
+      "color": "#33f01e",
+      "subjects": []
     }
   ],
-<<<<<<< Updated upstream
-  "lastUpdate": "2026-03-24T08:05:52.014Z",
-=======
-  "lastUpdate": "2026-03-24T08:36:09.640Z",
->>>>>>> Stashed changes
+  "lastUpdate": "2026-03-24T09:01:11.856Z",
   "version": "1.0.0"
 }
