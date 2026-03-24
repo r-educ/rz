@@ -1,0 +1,75 @@
+{
+  "classes": [
+    {
+      "id": "seconde",
+      "name": "Seconde G",
+      "subjects": [
+        {
+          "id": "bureautique",
+          "name": "Informatique",
+          "chapters": [
+            {
+              "id": "word-bases",
+              "title": "Word - Les bases",
+              "quiz": [
+                {
+                  "question": "Quel raccourci pour copier ?",
+                  "options": [
+                    "Ctrl+X",
+                    "Ctrl+C",
+                    "Ctrl+V",
+                    "Ctrl+Z"
+                  ],
+                  "correct": 1
+                },
+                {
+                  "question": "internet est ",
+                  "options": [
+                    "un réseau de télélphonie mobile",
+                    "un réseau mondial d'ordinateurs et autres équipoementsinformatiques",
+                    "une carte dans l'ordinateur",
+                    "un monde meilleur"
+                  ],
+                  "correct": 1
+                }
+              ]
+            }
+          ],
+          "description": "Les ba-ba de l'informatique",
+          "icon": "💻"
+        }
+      ],
+      "level": "Lycée",
+      "color": "#0000ff"
+    },
+    {
+      "id": "premiere-1774339095118",
+      "name": "Première G",
+      "level": "Lycée",
+      "color": "#00ff00",
+      "subjects": [
+        {
+          "id": "francais-1774339133708",
+          "name": "Français",
+          "description": "Expression et Communication Françaises",
+          "icon": "📘",
+          "chapters": [
+            {
+              "id": "lasalutation-1774339171923",
+              "title": "LaSalutation",
+              "icon": "📚",
+              "fundamentals": {
+                "objectives": "",
+                "keyPoints": "",
+                "resources": ""
+              },
+              "quiz": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "lastUpdate": "2026-03-24T08:28:45.454Z",
+  "version": "1.0.0"
+}
