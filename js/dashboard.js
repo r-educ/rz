@@ -966,22 +966,27 @@ function loadRevisionChapters() {
 }
 
 function startQuiz(classId, subjectId, chapterId) {
-    window.location.href = `quiz.html?class=${classId}&subject=${subjectId}&chapter=${chapterId}`;
+    // Nettoyer les IDs (enlever les timestamps si nécessaire)
+    const cleanClassId = classId.replace(/-\d+$/, '');
+    const cleanSubjectId = subjectId.replace(/-\d+$/, '');
+    const cleanChapterId = chapterId.replace(/-\d+$/, '');
+    
+    window.location.href = `quiz.html?class=${cleanClassId}&subject=${cleanSubjectId}&chapter=${cleanChapterId}`;
 }
 
-function startRevisionQuiz(classId, subjectId, chapterId) {
-    const subject = findSubject(classId, subjectId);
-    const chapter = subject?.chapters.find(c => c.id === chapterId);
+// function startRevisionQuiz(classId, subjectId, chapterId) {
+//     const subject = findSubject(classId, subjectId);
+//     const chapter = subject?.chapters.find(c => c.id === chapterId);
 
-    if (!chapter || !chapter.quiz || chapter.quiz.length === 0) {
-        alert('Ce chapitre n\'a pas encore de quiz');
-        return;
-    }
+//     if (!chapter || !chapter.quiz || chapter.quiz.length === 0) {
+//         alert('Ce chapitre n\'a pas encore de quiz');
+//         return;
+//     }
 
-    // Rediriger vers la page du quiz
-    // À adapter selon votre structure
-    window.location.href = `quiz.html?class=${classId}&subject=${subjectId}&chapter=${chapterId}`;
-}
+//     // Rediriger vers la page du quiz
+//     // À adapter selon votre structure
+//     window.location.href = `quiz.html?class=${classId}&subject=${subjectId}&chapter=${chapterId}`;
+// }
 
 
 
@@ -1593,76 +1598,6 @@ function showSubjectDetails(classId, subjectId) {
     html += '</div>';
     content.innerHTML = html;
 }
-
-// function showSubjectDetails(classId, subjectId) {
-//     const subject = findSubject(classId, subjectId);
-//     if (!subject) return;
-
-//     const content = document.getElementById('mainContent');
-
-//     let html = `
-//         <div class="fade-in">
-//             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-//                 <div>
-//                     <div style="font-size: 3rem; margin-bottom: 0.5rem;">${subject.icon || '📚'}</div>
-//                     <h2>${subject.name}</h2>
-//                     <p style="color: var(--gray-500);">${subject.description || ''}</p>
-//                 </div>
-//                 <button class="btn btn-primary" onclick="showAddChapterForm('${classId}', '${subjectId}')">
-//                     <i class="fas fa-plus"></i>
-//                     Nouveau chapitre
-//                 </button>
-//             </div>
-//     `;
-
-//     if (!subject.chapters || subject.chapters.length === 0) {
-//         html += `
-//             <div class="empty-state">
-//                 <i class="fas fa-book-open"></i>
-//                 <h3>Aucun chapitre</h3>
-//                 <p>Créez votre premier chapitre pour cette matière</p>
-//                 <button class="btn btn-primary" onclick="showAddChapterForm('${classId}', '${subjectId}')" style="margin-top: 1rem;">
-//                     Créer un chapitre
-//                 </button>
-//             </div>
-//         `;
-//     } else {
-//         html += '<div class="chapters-grid">';
-
-//         subject.chapters.forEach(chapter => {
-//             const quizCount = chapter.quiz?.length || 0;
-
-//             html += `
-//                 <div class="chapter-card" style="position: relative;">
-//                     <div class="card-actions">
-//                         <button class="action-btn edit" onclick="event.stopPropagation(); editChapter('${classId}', '${subjectId}', '${chapter.id}')">
-//                             <i class="fas fa-edit"></i>
-//                         </button>
-//                         <button class="action-btn delete" onclick="event.stopPropagation(); deleteChapter('${classId}', '${subjectId}', '${chapter.id}')">
-//                             <i class="fas fa-trash"></i>
-//                         </button>
-//                     </div>
-//                     <div onclick="viewChapterDetails('${classId}', '${subjectId}', '${chapter.id}')">
-//                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-//                             <span style="font-size: 1.5rem;">${chapter.icon || '📚'}</span>
-//                             <h3>${chapter.title}</h3>
-//                         </div>
-//                         <p style="margin-top: 0.5rem;">
-//                             <span class="badge" style="background: var(--primary-light);">
-//                                 ${quizCount} question(s)
-//                             </span>
-//                         </p>
-//                     </div>
-//                 </div>
-//             `;
-//         });
-
-//         html += '</div>';
-//     }
-
-//     html += '</div>';
-//     content.innerHTML = html;
-// }
 
 // Optionnel : vue détaillée d'un chapitre (pour voir les fondamentaux et quiz)
 function viewChapterDetails(classId, subjectId, chapterId) {
