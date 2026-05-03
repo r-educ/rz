@@ -31,6 +31,16 @@
                     "information + mécanique"
                   ],
                   "correct": 0
+                },
+                {
+                  "question": "internet =",
+                  "options": [
+                    "outil n°1 de l'onformatique",
+                    "un réseau mondial d'ordinateurs et autres équipements informatiques",
+                    "réseau des objets connectés",
+                    "aucune bonne réponse"
+                  ],
+                  "correct": 1
                 }
               ]
             }
@@ -50,9 +60,29 @@
       "name": "TG2",
       "level": "Lycée",
       "color": "#6366f1",
-      "subjects": []
+      "subjects": [
+        {
+          "id": "informatique-1774468139032",
+          "name": "Informatique",
+          "description": "Initiation à la programmation\nnotions basique d'un tableur\nbases en powerpoint",
+          "icon": "💻",
+          "chapters": [
+            {
+              "id": "l-algorithme-en-langage-structure-1774468332477",
+              "title": "L'algorithme en langage structuré",
+              "icon": "📚",
+              "fundamentals": {
+                "objectives": "écrire un algorithme simple et avec les structures de base (alternative et répétitive)",
+                "keyPoints": "variable-cumul-instruction-structure de base-boucle ...",
+                "resources": ""
+              },
+              "quiz": []
+            }
+          ]
+        }
+      ]
     }
   ],
-  "lastUpdate": "2026-03-24T09:35:35.661Z",
+  "lastUpdate": "2026-03-25T19:52:12.485Z",
   "version": "1.0.0"
 }
