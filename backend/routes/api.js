@@ -1,16 +1,55 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const router = express.Router();
 
 // Chemin du fichier de données
 const DATA_FILE = path.join(__dirname, '../data/pedagogie.json');
+const USERS_FILE = path.join(__dirname, '../data/users.json');
 const BACKUP_DIR = path.join(__dirname, '../data/backups');
 
 // Créer le dossier de backups s'il n'existe pas
 if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
+
+// Fonction pour hasher le mot de passe en SHA-256
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Fonction pour lire les utilisateurs
+function readUsers() {
+    try {
+        if (!fs.existsSync(USERS_FILE)) {
+            // Créer avec le compte admin par défaut si n'existe pas
+            const defaultUsers = [{
+                username: "admin",
+                passwordHash: hashPassword("admin")
+            }];
+            fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2));
+            return defaultUsers;
+        }
+        const data = fs.readFileSync(USERS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Erreur lecture utilisateurs:', error);
+        return [];
+    }
+}
+
+// Fonction pour écrire les utilisateurs
+function writeUsers(users) {
+    try {
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Erreur écriture utilisateurs:', error);
+        return false;
+    }
+}
+
 
 // Fonction pour lire les données
 function readData() {
@@ -52,6 +91,85 @@ function createBackupFile() {
 }
 
 // ==================== ROUTES ====================
+
+// POST - Enregistrer un formateur
+router.post('/auth/register', (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Nom d\'utilisateur et mot de passe requis' });
+        }
+        
+        const trimmedUsername = username.trim();
+        if (trimmedUsername.length < 2) {
+            return res.status(400).json({ error: 'Le nom d\'utilisateur doit contenir au moins 2 caractères' });
+        }
+        if (password.length < 4) {
+            return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 4 caractères' });
+        }
+        
+        const users = readUsers();
+        const userExists = users.some(u => u.username.toLowerCase() === trimmedUsername.toLowerCase());
+        
+        if (userExists) {
+            return res.status(400).json({ error: 'Ce nom d\'utilisateur est déjà utilisé' });
+        }
+        
+        const newUser = {
+            username: trimmedUsername,
+            passwordHash: hashPassword(password)
+        };
+        
+        users.push(newUser);
+        const success = writeUsers(users);
+        
+        if (success) {
+            res.status(201).json({ 
+                success: true, 
+                message: 'Compte formateur créé avec succès',
+                username: trimmedUsername
+            });
+        } else {
+            res.status(500).json({ error: 'Erreur lors de la sauvegarde de l\'utilisateur' });
+        }
+    } catch (error) {
+        console.error('Erreur POST /auth/register:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
+// POST - Connecter un formateur
+router.post('/auth/login', (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Nom d\'utilisateur et mot de passe requis' });
+        }
+        
+        const users = readUsers();
+        const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+        
+        if (!user) {
+            return res.status(400).json({ error: 'Nom d\'utilisateur ou mot de passe incorrect' });
+        }
+        
+        const hash = hashPassword(password);
+        if (user.passwordHash === hash) {
+            res.json({
+                success: true,
+                message: 'Connexion réussie',
+                username: user.username
+            });
+        } else {
+            res.status(400).json({ error: 'Nom d\'utilisateur ou mot de passe incorrect' });
+        }
+    } catch (error) {
+        console.error('Erreur POST /auth/login:', error);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
 
 // GET - Récupérer toutes les données
 router.get('/data', (req, res) => {

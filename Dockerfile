@@ -1,5 +1,8 @@
-# Image de base Node.js version 24
-FROM node:24-alpine
+# Image de base Alpine (déjà disponible localement)
+FROM alpine:latest
+
+# Installer Node.js et npm
+RUN apk add --no-cache nodejs npm
 
 # Créer le répertoire de travail dans le conteneur
 WORKDIR /app

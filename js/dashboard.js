@@ -150,15 +150,55 @@ function updateLastSavedIndicator() {
 
 // Initialisation au chargement
 document.addEventListener('DOMContentLoaded', async function() {
+    // Initialiser le thème visuel
+    initTheme();
+    
+    // Mettre à jour le badge utilisateur s'il existe une session active
+    updateUserBadge();
+    
     // Charger les données depuis le serveur
     await loadDataFromServer();
     
     // Démarrer la sauvegarde automatique
     startAutoSave(5); // Toutes les 5 minutes
     
-    // Afficher l'interface
-    showSettingsHome();
+    // Afficher l'interface (Révision par défaut)
+    switchMode('revision');
 });
+
+// ============================================
+// GESTION DU THÈME (CLAIR / SOMBRE)
+// ============================================
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('appTheme') || 'light';
+    const body = document.body;
+    const btn = document.getElementById('themeToggleBtn');
+    
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-theme');
+        if (btn) btn.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+        body.classList.remove('dark-theme');
+        if (btn) btn.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggleBtn');
+    
+    body.classList.toggle('dark-theme');
+    
+    const isDark = body.classList.contains('dark-theme');
+    localStorage.setItem('appTheme', isDark ? 'dark' : 'light');
+    
+    if (btn) {
+        btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+    
+    showNotification(isDark ? '🌙 Mode sombre activé' : '☀️ Mode clair activé', 'success');
+}
 
 
 
@@ -168,10 +208,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 // ============================================
 
 let appState = {
-    currentMode: 'settings',
+    currentMode: 'revision',
     currentClass: null,
     currentSubject: null,
-    navigation: ['home']
+    navigation: ['home'],
+    currentAdminTab: 'classes'
 };
 
 // Chargement des données
@@ -216,15 +257,95 @@ let pedagogieData = JSON.parse(localStorage.getItem('pedagogieData')) || {
 // GESTION DES MODES
 // ============================================
 
+// SHA-256 client-side helper using crypto.subtle
+async function sha256(message) {
+    if (!window.crypto || !window.crypto.subtle) {
+    throw new Error('Web Crypto API non disponible');
+  }
+
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+
+// Mettre à jour l'affichage du badge de formateur connecté
+function updateUserBadge() {
+    const badge = document.getElementById('userBadge');
+    const badgeName = document.getElementById('userBadgeName');
+    const authUser = sessionStorage.getItem('admin_auth');
+    
+    if (badge && badgeName) {
+        if (authUser) {
+            badgeName.textContent = authUser;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// Gérer la déconnexion
+function logoutAdmin() {
+    sessionStorage.removeItem('admin_auth');
+    updateUserBadge();
+    showNotification('👋 Déconnexion réussie', 'success');
+    switchMode('revision');
+}
+
+// Permuter d'onglet dans la modale d'authentification
+function switchAuthTab(tab) {
+    const tabLogin = document.getElementById('authTabLogin');
+    const tabRegister = document.getElementById('authTabRegister');
+    const containerLogin = document.getElementById('authLoginFormContainer');
+    const containerRegister = document.getElementById('authRegisterFormContainer');
+    
+    const errorMsgLogin = document.getElementById('authErrorMessage');
+    const errorMsgRegister = document.getElementById('registerErrorMessage');
+    if (errorMsgLogin) errorMsgLogin.style.display = 'none';
+    if (errorMsgRegister) errorMsgRegister.style.display = 'none';
+    
+    if (tab === 'login') {
+        tabLogin?.classList.add('active');
+        tabRegister?.classList.remove('active');
+        if (containerLogin) containerLogin.style.display = 'block';
+        if (containerRegister) containerRegister.style.display = 'none';
+        
+        const inputUsername = document.getElementById('adminUsernameInput');
+        setTimeout(() => inputUsername?.focus(), 100);
+    } else {
+        tabLogin?.classList.remove('active');
+        tabRegister?.classList.add('active');
+        if (containerLogin) containerLogin.style.display = 'none';
+        if (containerRegister) containerRegister.style.display = 'block';
+        
+        const inputRegisterUser = document.getElementById('registerUsernameInput');
+        setTimeout(() => inputRegisterUser?.focus(), 100);
+    }
+}
+
 function switchMode(mode) {
+    // Intercepter l'accès à l'administration si non authentifié
+    if (mode === 'settings') {
+        const isAuth = !!sessionStorage.getItem('admin_auth');
+        if (!isAuth) {
+            openAdminAuth();
+            return;
+        }
+    }
+
     appState.currentMode = mode;
     appState.navigation = ['home'];
 
-    // Mettre à jour les boutons
+    // Mettre à jour les boutons de mode
     document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active');
+        if (btn.classList.contains(mode)) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     });
-    event.target.closest('.mode-btn').classList.add('active');
 
     // Afficher le contenu approprié
     updateBreadcrumb();
@@ -232,6 +353,214 @@ function switchMode(mode) {
         showSettingsHome();
     } else {
         showRevisionHome();
+    }
+}
+
+// ============================================
+// AUTHENTIFICATION DE L'ESPACE ADMIN (REGLAGES)
+// ============================================
+
+function openAdminAuth() {
+    const modal = document.getElementById('adminAuthModal');
+    
+    if (modal) {
+        modal.style.display = 'flex';
+        
+        // Reset to login tab
+        switchAuthTab('login');
+        
+        // Clear fields
+        const usernameInput = document.getElementById('adminUsernameInput');
+        const passwordInput = document.getElementById('adminPasswordInput');
+        const regUsernameInput = document.getElementById('registerUsernameInput');
+        const regPasswordInput = document.getElementById('registerPasswordInput');
+        const regConfirmInput = document.getElementById('registerConfirmPasswordInput');
+        
+        if (usernameInput) usernameInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        if (regUsernameInput) regUsernameInput.value = '';
+        if (regPasswordInput) regPasswordInput.value = '';
+        if (regConfirmInput) regConfirmInput.value = '';
+        
+        // Retirer toute animation de secousse précédente
+        const content = modal.querySelector('.auth-modal-content');
+        if (content) content.classList.remove('shake');
+    }
+}
+
+function closeAdminAuth(redirect = false) {
+    const modal = document.getElementById('adminAuthModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    if (redirect) {
+        // Retourner en mode révision
+        switchMode('revision');
+    }
+}
+
+async function submitAdminAuth(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById('adminUsernameInput');
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const errorMsg = document.getElementById('authErrorMessage');
+    const modal = document.getElementById('adminAuthModal');
+    const content = modal ? modal.querySelector('.auth-modal-content') : null;
+    
+    if (!usernameInput || !passwordInput) return;
+    
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            sessionStorage.setItem('admin_auth', result.username);
+            updateUserBadge();
+            closeAdminAuth(false);
+            switchMode('settings');
+            showNotification(`🔑 Bienvenue, ${result.username}`, 'success');
+        } else {
+            throw new Error(result.error || 'Erreur authentification');
+        }
+    } catch (error) {
+        console.log('⚠️ Serveur hors-ligne ou erreur, tentative d\'authentification locale...', error);
+        
+        // Fallback local
+        const localUsersStr = localStorage.getItem('pedagogieUsers');
+        let localUsers = [];
+        
+        if (localUsersStr) {
+            localUsers = JSON.parse(localUsersStr);
+        } else {
+            const adminHash = await sha256('admin');
+            localUsers = [{ username: 'admin', passwordHash: adminHash }];
+            localStorage.setItem('pedagogieUsers', JSON.stringify(localUsers));
+        }
+        
+        const pwdHash = await sha256(password);
+        const user = localUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+        
+        if (user && user.passwordHash === pwdHash) {
+            sessionStorage.setItem('admin_auth', user.username);
+            updateUserBadge();
+            closeAdminAuth(false);
+            switchMode('settings');
+            showNotification(`🔌 Mode hors-ligne - Bienvenue, ${user.username}`, 'success');
+        } else {
+            if (errorMsg) {
+                errorMsg.textContent = error.message.includes('fetch') ? "Identifiant ou mot de passe incorrect (local)" : (error.message || "Identifiant ou mot de passe incorrect");
+                errorMsg.style.display = 'block';
+            }
+            passwordInput.value = '';
+            passwordInput.focus();
+            
+            if (content) {
+                content.classList.remove('shake');
+                void content.offsetWidth; // Reflow
+                content.classList.add('shake');
+            }
+            
+            showNotification('❌ Identifiants incorrects', 'error');
+        }
+    }
+}
+
+async function submitAdminRegister(event) {
+    event.preventDefault();
+    const usernameInput = document.getElementById('registerUsernameInput');
+    const passwordInput = document.getElementById('registerPasswordInput');
+    const confirmInput = document.getElementById('registerConfirmPasswordInput');
+    const errorMsg = document.getElementById('registerErrorMessage');
+    const modal = document.getElementById('adminAuthModal');
+    const content = modal ? modal.querySelector('.auth-modal-content') : null;
+    
+    if (!usernameInput || !passwordInput || !confirmInput) return;
+    
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value;
+    const confirm = confirmInput.value;
+    
+    if (errorMsg) errorMsg.style.display = 'none';
+    
+    if (username.length < 2) {
+        showErrorMsg('Le nom d\'utilisateur doit faire au moins 2 caractères');
+        return;
+    }
+    if (password.length < 4) {
+        showErrorMsg('Le mot de passe doit faire au moins 4 caractères');
+        return;
+    }
+    if (password !== confirm) {
+        showErrorMsg('Les mots de passe ne correspondent pas');
+        return;
+    }
+    
+    function showErrorMsg(msg) {
+        if (errorMsg) {
+            errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${msg}`;
+            errorMsg.style.display = 'block';
+        }
+        if (content) {
+            content.classList.remove('shake');
+            void content.offsetWidth;
+            content.classList.add('shake');
+        }
+        showNotification(`❌ ${msg}`, 'error');
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            sessionStorage.setItem('admin_auth', result.username);
+            updateUserBadge();
+            closeAdminAuth(false);
+            switchMode('settings');
+            showNotification(`👤 Compte formateur créé. Bienvenue, ${result.username} !`, 'success');
+        } else {
+            throw new Error(result.error || 'Erreur de création de compte');
+        }
+    } catch (error) {
+        console.log('⚠️ Serveur hors-ligne ou erreur, enregistrement local...', error);
+        
+        const localUsersStr = localStorage.getItem('pedagogieUsers') || '[]';
+        let localUsers = JSON.parse(localUsersStr);
+        
+        if (localUsers.length === 0) {
+            const adminHash = await sha256('admin');
+            localUsers.push({ username: 'admin', passwordHash: adminHash });
+        }
+        
+        const userExists = localUsers.some(u => u.username.toLowerCase() === username.toLowerCase());
+        
+        if (userExists) {
+            showErrorMsg(error.message.includes('fetch') ? 'Ce nom d\'utilisateur est déjà utilisé localement' : error.message);
+            return;
+        }
+        
+        const pwdHash = await sha256(password);
+        localUsers.push({ username, passwordHash: pwdHash });
+        localStorage.setItem('pedagogieUsers', JSON.stringify(localUsers));
+        
+        sessionStorage.setItem('admin_auth', username);
+        updateUserBadge();
+        closeAdminAuth(false);
+        switchMode('settings');
+        showNotification(`🔌 Compte créé localement (Hors-ligne). Bienvenue, ${username} !`, 'success');
     }
 }
 
@@ -338,59 +667,177 @@ function showSettingsHome() {
 
     let html = `
         <div class="fade-in">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                 <h2><i class="fas fa-cog"></i> Administration</h2>
+                
+                <div class="admin-tabs-nav">
+                    <button class="admin-tab-btn ${appState.currentAdminTab === 'classes' ? 'active' : ''}" onclick="switchAdminTab('classes')">
+                        <i class="fas fa-school"></i> Classes
+                    </button>
+                    <button class="admin-tab-btn ${appState.currentAdminTab === 'backups' ? 'active' : ''}" onclick="switchAdminTab('backups')">
+                        <i class="fas fa-database"></i> Sauvegardes & Données
+                    </button>
+                </div>
+
+                ${appState.currentAdminTab === 'classes' ? `
                 <button class="btn btn-primary" onclick="showAddClassForm()">
                     <i class="fas fa-plus"></i>
                     Nouvelle classe
                 </button>
+                ` : ''}
             </div>
     `;
 
-    if (pedagogieData.classes.length === 0) {
+    if (appState.currentAdminTab === 'classes') {
         html += `
-            <div class="empty-state">
-                <i class="fas fa-school"></i>
-                <h3>Aucune classe pour le moment</h3>
-                <p>Commencez par créer votre première classe</p>
-                <button class="btn btn-primary" onclick="showAddClassForm()" style="margin-top: 1rem;">
-                    Créer une classe
-                </button>
+            <div class="search-filter-container" style="margin-bottom: 2rem; max-width: 500px;">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="classSearchInput" class="form-input search-input" 
+                           placeholder="Rechercher une classe par son nom..." oninput="filterAdminClasses()">
+                </div>
             </div>
         `;
-    } else {
-        html += '<div class="classes-grid">';
 
-        pedagogieData.classes.forEach(classe => {
-            const subjectCount = classe.subjects?.length || 0;
-            const chapterCount = classe.subjects?.reduce((acc, s) => acc + (s.chapters?.length || 0), 0) || 0;
-
+        if (pedagogieData.classes.length === 0) {
             html += `
-                <div class="class-card" style="position: relative;">
-                    <div class="card-actions">
-                        <button class="action-btn edit" onclick="event.stopPropagation(); editClass('${classe.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="event.stopPropagation(); deleteClass('${classe.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div onclick="navigateTo('class', '${classe.id}')">
-                        <div style="display: flex; justify-content: space-between; align-items: start;">
-                            <h3 style="color: ${classe.color};">${classe.name}</h3>
-                            <span class="badge" style="background: ${classe.color}20; color: ${classe.color};">
-                                ${classe.level}
-                            </span>
-                        </div>
-                        <p style="color: var(--gray-500); margin: 0.5rem 0;">
-                            ${subjectCount} matière(s) • ${chapterCount} chapitre(s)
-                        </p>
-                    </div>
+                <div class="empty-state">
+                    <i class="fas fa-school"></i>
+                    <h3>Aucune classe pour le moment</h3>
+                    <p>Commencez par créer votre première classe</p>
+                    <button class="btn btn-primary" onclick="showAddClassForm()" style="margin-top: 1rem;">
+                        Créer une classe
+                    </button>
                 </div>
             `;
-        });
+        } else {
+            html += '<div class="classes-grid" id="adminClassesGrid">';
 
-        html += '</div>';
+            pedagogieData.classes.forEach(classe => {
+                const subjectCount = classe.subjects?.length || 0;
+                const chapterCount = classe.subjects?.reduce((acc, s) => acc + (s.chapters?.length || 0), 0) || 0;
+
+                html += `
+                    <div class="class-card" data-class-name="${classe.name.toLowerCase()}" style="position: relative;">
+                        <div class="card-actions">
+                            <button class="action-btn edit" onclick="event.stopPropagation(); editClass('${classe.id}')" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="event.stopPropagation(); deleteClass('${classe.id}')" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div onclick="navigateTo('class', '${classe.id}')">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <h3 style="color: ${classe.color};">${classe.name}</h3>
+                                <span class="badge" style="background: ${classe.color}20; color: ${classe.color};">
+                                    ${classe.level}
+                                </span>
+                            </div>
+                            <p style="color: var(--gray-500); margin: 0.5rem 0;">
+                                ${subjectCount} matière(s) • ${chapterCount} chapitre(s)
+                            </p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+        }
+    } else {
+        // Onglet Sauvegardes & Données
+        html += `
+            <div class="backups-dashboard-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+                <!-- Colonne Gauche: Statistiques, Import & Export -->
+                <div class="backups-left-panel" style="display: flex; flex-direction: column; gap: 2rem;">
+                    
+                    <!-- Stats Card -->
+                    <div class="glass-card panel-card" style="padding: 1.5rem; border-radius: var(--radius-xl); border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                            <i class="fas fa-chart-pie" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                            Statistiques du Serveur
+                        </h3>
+                        <div id="serverStatsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="stat-item" style="background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
+                                <span style="font-size: 1.5rem; font-weight: 700; color: var(--primary);" id="statClasses">-</span>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Classes</p>
+                            </div>
+                            <div class="stat-item" style="background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
+                                <span style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="statSubjects">-</span>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Matières</p>
+                            </div>
+                            <div class="stat-item" style="background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
+                                <span style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="statChapters">-</span>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Chapitres</p>
+                            </div>
+                            <div class="stat-item" style="background: var(--gray-50); padding: 1rem; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border-color);">
+                                <span style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="statQuestions">-</span>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Questions</p>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem;" id="statLastUpdate">
+                            Dernière synchronisation: -
+                        </p>
+                    </div>
+
+                    <!-- Import/Export Card -->
+                    <div class="glass-card panel-card" style="padding: 1.5rem; border-radius: var(--radius-xl); border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                            <i class="fas fa-exchange-alt" style="color: var(--success); margin-right: 0.5rem;"></i>
+                            Transfert de Données
+                        </h3>
+                        
+                        <div class="import-drag-zone" id="importDragZone" 
+                             onclick="triggerFileInputClick()"
+                             ondragover="handleDragOver(event)"
+                             ondragleave="handleDragLeave(event)"
+                             ondrop="handleFileDrop(event)">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1rem; transition: transform 0.2s ease;"></i>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-main);">Glissez-déposez un fichier JSON</h4>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">ou cliquez pour parcourir vos fichiers</p>
+                            <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="handleFileSelect(event)">
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <a class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" 
+                               href="${API_URL}/export/csv" download="pedagogie_export.csv">
+                                <i class="fas fa-file-csv" style="color: #10b981;"></i>
+                                Exporter CSV
+                            </a>
+                            <button class="btn btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" onclick="exportDataToJSON()">
+                                <i class="fas fa-file-code" style="color: #6366f1;"></i>
+                                Exporter JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colonne Droite: Sauvegardes Serveur -->
+                <div class="backups-right-panel glass-card panel-card" style="padding: 1.5rem; border-radius: var(--radius-xl); border: 1px solid var(--border-color); background: var(--bg-card); display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                        <h3 style="margin: 0; color: var(--text-main);">
+                            <i class="fas fa-server" style="color: var(--warning); margin-right: 0.5rem;"></i>
+                            Sauvegardes Serveur
+                        </h3>
+                        <button class="btn btn-primary btn-sm" onclick="triggerServerBackup()">
+                            <i class="fas fa-plus"></i> Créer Backup
+                        </button>
+                    </div>
+                    
+                    <div id="serverBackupsList" style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 0.5rem;">
+                        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p>Chargement des sauvegardes...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            loadBackupStats();
+            loadServerBackups();
+        }, 100);
     }
 
     html += '</div>';
@@ -942,13 +1389,23 @@ function loadRevisionChapters() {
         return;
     }
 
-    let html = '<h3 style="margin-bottom: 1rem;">Chapitres disponibles</h3><div class="chapters-grid">';
+    let html = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="margin: 0;">Chapitres disponibles</h3>
+            <div class="search-box" style="max-width: 350px;">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="chapterSearchInput" class="form-input search-input" 
+                       placeholder="Filtrer les chapitres..." oninput="filterRevisionChapters()">
+            </div>
+        </div>
+        <div class="chapters-grid" id="revisionChaptersGrid">
+    `;
 
     subject.chapters.forEach(chapter => {
         const quizCount = chapter.quiz?.length || 0;
 
         html += `
-            <div class="chapter-card" onclick="startRevisionQuiz('${classId}', '${subjectId}', '${chapter.id}')">
+            <div class="chapter-card" data-chapter-title="${chapter.title.toLowerCase()}" onclick="startRevisionQuiz('${classId}', '${subjectId}', '${chapter.id}')">
                 <h3>${chapter.title}</h3>
                 <p style="color: var(--gray-500); margin: 0.5rem 0;">
                     ${quizCount} question(s)
@@ -963,6 +1420,45 @@ function loadRevisionChapters() {
 
     html += '</div>';
     chaptersDiv.innerHTML = html;
+}
+
+function filterRevisionChapters() {
+    const input = document.getElementById('chapterSearchInput');
+    if (!input) return;
+    
+    const query = input.value.toLowerCase().trim();
+    const grid = document.getElementById('revisionChaptersGrid');
+    if (!grid) return;
+    
+    const cards = grid.getElementsByClassName('chapter-card');
+    let hasVisible = false;
+    
+    Array.from(cards).forEach(card => {
+        const title = card.getAttribute('data-chapter-title') || '';
+        if (title.includes(query)) {
+            card.style.display = '';
+            hasVisible = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    let noResultMsg = document.getElementById('noChapterResultMessage');
+    if (!hasVisible && query !== '') {
+        if (!noResultMsg) {
+            noResultMsg = document.createElement('div');
+            noResultMsg.id = 'noChapterResultMessage';
+            noResultMsg.className = 'empty-state';
+            noResultMsg.style.gridColumn = '1 / -1';
+            noResultMsg.innerHTML = `
+                <i class="fas fa-search"></i>
+                <p>Aucun chapitre ne correspond à "${escapeHtml(query)}"</p>
+            `;
+            grid.appendChild(noResultMsg);
+        }
+    } else if (noResultMsg) {
+        noResultMsg.remove();
+    }
 }
 
 function startQuiz(classId, subjectId, chapterId) {
@@ -2053,10 +2549,344 @@ function getValidQuizUrl(classId, subjectId, chapterId) {
 
 
 // ============================================
-// INITIALISATION
-//============================================
+// ADMINISTRATION ET SAUVEGARDES / GESTION
+// ============================================
 
-document.addEventListener('DOMContentLoaded', function () {
+function switchAdminTab(tab) {
+    appState.currentAdminTab = tab;
     showSettingsHome();
-});
+}
+
+function filterAdminClasses() {
+    const input = document.getElementById('classSearchInput');
+    if (!input) return;
+    
+    const query = input.value.toLowerCase().trim();
+    const grid = document.getElementById('adminClassesGrid');
+    if (!grid) return;
+    
+    const cards = grid.getElementsByClassName('class-card');
+    let hasVisible = false;
+    
+    Array.from(cards).forEach(card => {
+        const className = card.getAttribute('data-class-name') || '';
+        if (className.includes(query)) {
+            card.style.display = '';
+            hasVisible = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Si tout est masqué, on peut afficher un petit message dans la grille
+    let noResultMsg = document.getElementById('noClassResultMessage');
+    if (!hasVisible && query !== '') {
+        if (!noResultMsg) {
+            noResultMsg = document.createElement('div');
+            noResultMsg.id = 'noClassResultMessage';
+            noResultMsg.className = 'empty-state';
+            noResultMsg.style.gridColumn = '1 / -1';
+            noResultMsg.innerHTML = `
+                <i class="fas fa-search"></i>
+                <p>Aucune classe ne correspond à "${escapeHtml(query)}"</p>
+            `;
+            grid.appendChild(noResultMsg);
+        }
+    } else if (noResultMsg) {
+        noResultMsg.remove();
+    }
+}
+
+async function loadBackupStats() {
+    try {
+        const response = await fetch(`${API_URL}/stats`);
+        if (!response.ok) throw new Error();
+        const stats = await response.json();
+        
+        document.getElementById('statClasses').textContent = stats.totalClasses ?? 0;
+        document.getElementById('statSubjects').textContent = stats.totalSubjects ?? 0;
+        document.getElementById('statChapters').textContent = stats.totalChapters ?? 0;
+        document.getElementById('statQuestions').textContent = stats.totalQuestions ?? 0;
+        
+        const lastUpdateText = stats.lastUpdate 
+            ? new Date(stats.lastUpdate).toLocaleString('fr-FR')
+            : 'Aucune donnée';
+        document.getElementById('statLastUpdate').innerHTML = `<strong>Dernière synchronisation :</strong> ${lastUpdateText}`;
+    } catch (e) {
+        console.error('Erreur chargement statistiques', e);
+        showNotification('Impossible de charger les statistiques du serveur', 'error');
+    }
+}
+
+async function loadServerBackups() {
+    const listContainer = document.getElementById('serverBackupsList');
+    if (!listContainer) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/backups`);
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        
+        if (!result.success || !result.backups || result.backups.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    <i class="fas fa-hdd" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p>Aucune sauvegarde sur le serveur</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        result.backups.forEach(backup => {
+            const formattedDate = new Date(backup.modified).toLocaleString('fr-FR');
+            const formattedSize = formatBytes(backup.size);
+            
+            html += `
+                <div class="backup-item">
+                    <div class="backup-details">
+                        <div class="backup-icon-container">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="backup-text">
+                            <span class="backup-filename" title="${backup.name}">${backup.name}</span>
+                            <span class="backup-meta">${formattedDate} • ${formattedSize}</span>
+                        </div>
+                    </div>
+                    <div class="backup-buttons">
+                        <button class="btn btn-success btn-sm" onclick="restoreServerBackup('${backup.name}')" title="Restaurer cette sauvegarde">
+                            <i class="fas fa-undo"></i> Restaurer
+                        </button>
+                        <button class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem;" onclick="deleteServerBackup('${backup.name}')" title="Supprimer cette sauvegarde">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+    } catch (e) {
+        console.error('Erreur lors du chargement des sauvegardes', e);
+        listContainer.innerHTML = `
+            <div style="text-align: center; color: var(--danger); padding: 2rem;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                <p>Erreur de connexion avec le serveur</p>
+            </div>
+        `;
+    }
+}
+
+async function triggerServerBackup() {
+    showNotification('Création de la sauvegarde en cours...', 'info');
+    try {
+        const response = await fetch(`${API_URL}/backup`);
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Sauvegarde créée avec succès sur le serveur', 'success');
+            loadServerBackups();
+            loadBackupStats();
+        } else {
+            throw new Error();
+        }
+    } catch (e) {
+        showNotification('Impossible de créer la sauvegarde', 'error');
+    }
+}
+
+async function restoreServerBackup(filename) {
+    if (!confirm(`⚠️ ATTENTION : Restaurer la sauvegarde "${filename}" va écraser TOUTES vos données actuelles !\n\nVoulez-vous vraiment continuer ?`)) {
+        return;
+    }
+    
+    showNotification('Restauration des données...', 'info');
+    try {
+        const response = await fetch(`${API_URL}/restore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ backupFile: filename })
+        });
+        
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Données restaurées avec succès !', 'success');
+            await loadDataFromServer();
+            showSettingsHome();
+        } else {
+            throw new Error();
+        }
+    } catch (e) {
+        showNotification('Erreur lors de la restauration', 'error');
+    }
+}
+
+async function deleteServerBackup(filename) {
+    if (!confirm(`Voulez-vous vraiment supprimer la sauvegarde "${filename}" ?\n\nCette action est irréversible.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/backup/${filename}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Sauvegarde supprimée', 'success');
+            loadServerBackups();
+        } else {
+            throw new Error();
+        }
+    } catch (e) {
+        showNotification('Impossible de supprimer la sauvegarde', 'error');
+    }
+}
+
+function exportDataToJSON() {
+    try {
+        const jsonStr = JSON.stringify(pedagogieData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pedagogie_export_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showNotification('Export JSON démarré', 'success');
+    } catch (e) {
+        showNotification('Erreur lors de l\'export JSON', 'error');
+    }
+}
+
+// Drag & Drop Handlers
+function triggerFileInputClick() {
+    const input = document.getElementById('jsonFileInput');
+    if (input) input.click();
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    const zone = document.getElementById('importDragZone');
+    if (zone) zone.classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    const zone = document.getElementById('importDragZone');
+    if (zone) zone.classList.remove('dragover');
+}
+
+function handleFileDrop(e) {
+    e.preventDefault();
+    const zone = document.getElementById('importDragZone');
+    if (zone) zone.classList.remove('dragover');
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processJsonImportFile(e.dataTransfer.files[0]);
+    }
+}
+
+function handleFileSelect(e) {
+    if (e.target.files && e.target.files[0]) {
+        processJsonImportFile(e.target.files[0]);
+    }
+}
+
+function processJsonImportFile(file) {
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+        showNotification('Veuillez importer un fichier au format .json uniquement', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Validation de structure basique
+            if (!data || typeof data !== 'object' || !Array.isArray(data.classes)) {
+                showNotification('Fichier invalide : la structure des données de pédagogie est incorrecte (classes manquantes)', 'error');
+                return;
+            }
+            
+            // Demande explicite de confirmation
+            if (confirm(`⚠️ ATTENTION : L'importation de ce fichier va écraser TOUTES vos données actuelles !\n\nFichier : ${file.name}\nClasses trouvées : ${data.classes.length}\n\nVoulez-vous continuer ?`)) {
+                pedagogieData = data;
+                saveData(); // Sauvegarde locale et serveur
+                showNotification('Données importées avec succès !', 'success');
+                showSettingsHome();
+            }
+        } catch (err) {
+            showNotification('Erreur de lecture du JSON. Fichier corrompu ou mal formé.', 'error');
+        }
+    };
+    reader.onerror = function() {
+        showNotification('Impossible de lire le fichier', 'error');
+    };
+    reader.readAsText(file);
+}
+
+// Outils utilitaires
+function escapeHtml(str) {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatBytes(bytes, decimals = 2) {
+    if (bytes === 0) return '0 Octets';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Octets', 'Ko', 'Mo', 'Go'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Notification flottante moderne
+function showNotification(message, type = 'info') {
+    // Supprimer les notifications existantes du même message pour éviter l'encombrement
+    const existing = document.querySelectorAll('.notification-toast');
+    existing.forEach(toast => {
+        if (toast.querySelector('span').textContent === message) {
+            toast.remove();
+        }
+    });
+
+    const toast = document.createElement('div');
+    toast.className = `notification-toast toast-${type}`;
+    
+    let iconClass = 'fa-info-circle';
+    if (type === 'success') iconClass = 'fa-check-circle';
+    else if (type === 'error') iconClass = 'fa-exclamation-circle';
+    else if (type === 'warning') iconClass = 'fa-exclamation-triangle';
+    
+    toast.innerHTML = `
+        <i class="fas ${iconClass}"></i>
+        <span>${escapeHtml(message)}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove après 4 secondes
+    setTimeout(() => {
+        toast.style.animation = 'toastFadeOut 0.3s forwards';
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 4000);
+}
 

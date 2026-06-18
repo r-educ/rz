@@ -53,7 +53,27 @@
       "name": "1G2",
       "level": "Lycée",
       "color": "#6366f1",
-      "subjects": []
+      "subjects": [
+        {
+          "id": "francais-1779266948230",
+          "name": "Français",
+          "description": "Expression et Communication française",
+          "icon": "📚",
+          "chapters": [
+            {
+              "id": "le-rapport-1779267018750",
+              "title": "le rapport",
+              "icon": "📚",
+              "fundamentals": {
+                "objectives": "rédiger un rapport d'activités",
+                "keyPoints": "",
+                "resources": ""
+              },
+              "quiz": []
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "tg2-1774344776148",
@@ -81,8 +101,15 @@
           ]
         }
       ]
+    },
+    {
+      "id": "cap1-1779293432202",
+      "name": "CAP1",
+      "level": "Collège",
+      "color": "#6366f1",
+      "subjects": []
     }
   ],
-  "lastUpdate": "2026-03-25T19:52:12.485Z",
+  "lastUpdate": "2026-05-20T17:01:18.209Z",
   "version": "1.0.0"
 }

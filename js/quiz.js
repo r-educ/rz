@@ -158,14 +158,37 @@ function displayQuestion() {
             </div>
             
             <div class="options-container">
-                ${currentQuestion.options.map((option, index) => `
-                    <div class="option-card ${quizState.userAnswers[quizState.currentQuestionIndex] === index ? 'selected' : ''}" 
-                         onclick="selectAnswer(${index})">
-                        <div class="option-letter">${String.fromCharCode(65 + index)}</div>
-                        <div class="option-text">${escapeHtml(option)}</div>
-                        ${quizState.userAnswers[quizState.currentQuestionIndex] === index ? '<i class="fas fa-check-circle check-icon"></i>' : ''}
-                    </div>
-                `).join('')}
+                ${currentQuestion.options.map((option, index) => {
+                    const isAnswered = quizState.userAnswers[quizState.currentQuestionIndex] !== null;
+                    const isSelected = quizState.userAnswers[quizState.currentQuestionIndex] === index;
+                    const isCorrect = currentQuestion.correct === index;
+                    
+                    let cardClass = '';
+                    let iconHtml = '';
+                    
+                    if (isAnswered) {
+                        cardClass += ' disabled';
+                        if (isCorrect) {
+                            cardClass += ' correct';
+                            iconHtml = '<i class="fas fa-check-circle check-icon"></i>';
+                        } else if (isSelected) {
+                            cardClass += ' incorrect';
+                            iconHtml = '<i class="fas fa-times-circle check-icon"></i>';
+                        }
+                    } else if (isSelected) {
+                        cardClass += ' selected';
+                        iconHtml = '<i class="fas fa-check-circle check-icon"></i>';
+                    }
+                    
+                    return `
+                        <div class="option-card${cardClass}" 
+                             onclick="selectAnswer(${index})">
+                            <div class="option-letter">${String.fromCharCode(65 + index)}</div>
+                            <div class="option-text">${escapeHtml(option)}</div>
+                            ${iconHtml}
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;
@@ -180,12 +203,49 @@ function displayQuestion() {
 
 function selectAnswer(optionIndex) {
     if (quizState.quizCompleted) return;
+    if (quizState.userAnswers[quizState.currentQuestionIndex] !== null) return;
 
     // Sauvegarder la réponse
     quizState.userAnswers[quizState.currentQuestionIndex] = optionIndex;
     
-    // Mettre à jour l'affichage de la question
-    displayQuestion();
+    const currentQuestion = quizState.questions[quizState.currentQuestionIndex];
+    const correctIndex = currentQuestion.correct;
+    
+    // Récupérer toutes les cartes d'options
+    const optionCards = document.querySelectorAll('.options-container .option-card');
+    
+    optionCards.forEach((card, index) => {
+        // Désactiver toutes les cartes
+        card.classList.add('disabled');
+        
+        // Supprimer la classe selected temporaire si elle existe
+        card.classList.remove('selected');
+        
+        // Ajouter un feedback visuel instantané
+        if (index === correctIndex) {
+            card.classList.add('correct');
+            // Ajouter l'icône check
+            let icon = card.querySelector('.check-icon');
+            if (!icon) {
+                icon = document.createElement('i');
+                icon.className = 'fas fa-check-circle check-icon';
+                card.appendChild(icon);
+            } else {
+                icon.className = 'fas fa-check-circle check-icon';
+            }
+        } else if (index === optionIndex) {
+            card.classList.add('incorrect');
+            // Ajouter l'icône times
+            let icon = card.querySelector('.check-icon');
+            if (!icon) {
+                icon = document.createElement('i');
+                icon.className = 'fas fa-times-circle check-icon';
+                card.appendChild(icon);
+            } else {
+                icon.className = 'fas fa-times-circle check-icon';
+            }
+        }
+    });
     
     // Activer le bouton suivant
     const nextBtn = document.getElementById('nextBtn');
@@ -271,6 +331,7 @@ function showResults() {
     if (percentage >= 80) {
         message = 'Excellent ! 🎉';
         emoji = '🏆';
+        startConfetti();
     } else if (percentage >= 60) {
         message = 'Très bien ! 👏';
         emoji = '⭐';
@@ -340,6 +401,119 @@ function showResults() {
 }
 
 // ============================================
+// CONFETTI CELEBRATION (VANILLA CANVAS)
+// ============================================
+
+let confettiAnimationId = null;
+let confettiParticles = [];
+
+function startConfetti() {
+    const canvas = document.getElementById('confettiCanvas');
+    if (!canvas) return;
+
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    
+    // Ajuster la taille du canvas
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Propriétés des confettis
+    const colors = [
+        '#6366f1', '#818cf8', '#4f46e5', // Indigo
+        '#10b981', '#34d399', '#059669', // Emeraude
+        '#f59e0b', '#fbbf24', '#d97706', // Ambre
+        '#ef4444', '#f87171', '#dc2626', // Rouge
+        '#ec4899', '#f472b6', '#db2777', // Rose
+        '#3b82f6', '#60a5fa', '#2563eb'  // Bleu
+    ];
+
+    confettiParticles = [];
+    const particleCount = 150;
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * -canvas.height - 20; // Commencer au-dessus de l'écran
+            this.size = Math.random() * 8 + 6;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            this.speedX = Math.random() * 4 - 2;
+            this.speedY = Math.random() * 4 + 4;
+            this.rotation = Math.random() * 360;
+            this.rotationSpeed = Math.random() * 4 - 2;
+            this.opacity = Math.random() * 0.4 + 0.6;
+        }
+
+        update() {
+            this.y += this.speedY;
+            this.x += this.speedX;
+            this.rotation += this.rotationSpeed;
+
+            // Vent horizontal sinus
+            this.x += Math.sin(this.y / 30) * 0.5;
+
+            // Si le confetti sort de l'écran par le bas, le réinitialiser au-dessus
+            if (this.y > canvas.height) {
+                this.y = -20;
+                this.x = Math.random() * canvas.width;
+                this.speedY = Math.random() * 4 + 4;
+                this.speedX = Math.random() * 4 - 2;
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+            ctx.rotate((this.rotation * Math.PI) / 180);
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = this.color;
+            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+            ctx.restore();
+        }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+        confettiParticles.push(new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        confettiParticles.forEach(p => {
+            p.update();
+            p.draw();
+        });
+
+        confettiAnimationId = requestAnimationFrame(animate);
+    }
+
+    // Arrêter toute animation précédente
+    if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+    }
+    
+    animate();
+}
+
+function stopConfetti() {
+    if (confettiAnimationId) {
+        cancelAnimationFrame(confettiAnimationId);
+        confettiAnimationId = null;
+    }
+    const canvas = document.getElementById('confettiCanvas');
+    if (canvas) {
+        canvas.style.display = 'none';
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    confettiParticles = [];
+}
+
+// ============================================
 // FONCTIONS UTILITAIRES
 // ============================================
 
@@ -391,6 +565,9 @@ function enableControls() {
 }
 
 function retryQuiz() {
+    // Arrêter les confettis
+    stopConfetti();
+
     // Réinitialiser l'état
     quizState.currentQuestionIndex = 0;
     quizState.score = 0;
@@ -417,8 +594,13 @@ function retryQuiz() {
 }
 
 function goBackToRevision() {
+    stopConfetti();
     window.location.href = 'index.html';
 }
+
+window.addEventListener('beforeunload', () => {
+    stopConfetti();
+});
 
 function showNoQuestionsMessage(chapterTitle) {
     const container = document.getElementById('questionContainer');
@@ -495,6 +677,12 @@ function escapeHtml(text) {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Appliquer le thème sauvegardé
+    const savedTheme = localStorage.getItem('appTheme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+
     // Ajouter les styles nécessaires si non présents
     addQuizStyles();
     
